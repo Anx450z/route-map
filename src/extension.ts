@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import { exec } from 'child_process';
+import * as path from 'path';
 
 export function activate(context: vscode.ExtensionContext) {
     // Register a code lens provider
@@ -6,34 +8,48 @@ export function activate(context: vscode.ExtensionContext) {
         provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken) {
             const codeLenses: vscode.CodeLens[] = [];
 
-            // Regex pattern to match Rails routes
-            const routePattern = /get|post|put|patch|delete.*(?=:)/g;
+            const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
+            if (workspaceFolder) {
+                const workspacePath = workspaceFolder.uri.fsPath;
+                console.log('document',document.fileName);
+                    exec('rails routes', { cwd: workspacePath }, (error, stdout) => {
+                        if (error) {
+                            vscode.window.showErrorMessage(`Error running 'rails routes' command: ${error.message}`);
+                            return;
+                        }
+                        // console.log("stdout: " + stdout);
+                        const routes = parseRoutes(stdout);
 
-            // Iterate over each line in the document
-            for (let line = 0; line < document.lineCount; line++) {
-                const { text } = document.lineAt(line);
+                        // Iterate over each line in the document
+                        for (let line = 0; line < document.lineCount; line++) {
+                            const { text } = document.lineAt(line);
 
-                // Match the route pattern
-                const match = routePattern.exec(text);
-                if (match) {
-                    const routeName = match[0];
+                            // Match the controller action
+                            const match = /def\s+(\w+)/.exec(text);
+                            if (match) {
+                                const action = match[1];
 
-                    // Find the corresponding controller action
-                    const actionLine = findControllerActionLine(document, line);
-                    if (actionLine !== -1) {
-                        const codeLensRange = new vscode.Range(actionLine, 0, actionLine, 0);
-                        const codeLens = new vscode.CodeLens(codeLensRange);
+                                // Find the corresponding route
+                                const route = findRouteForAction(routes, action);
+                                console.log("route: " + route);
+                                if (route) {
+                                    console.log('route found', route);
+                                    const codeLensRange = new vscode.Range(line, 0, line, 0);
+                                    const codeLens = new vscode.CodeLens(codeLensRange);
 
-                        // Set the code lens command and its title
-                        codeLens.command = {
-                            title: `Go to route: ${routeName}`,
-                            command: 'extension.gotoRoute',
-                            arguments: [routeName],
-                        };
+                                    // Set the code lens command and its title
+                                    console.log('route.url', route.url);
+                                    codeLens.command = {
+                                        title: `Go to route: ${route.url}`,
+                                        command: 'extension.gotoRoute',
+                                        arguments: [route.url],
+                                    };
 
-                        codeLenses.push(codeLens);
-                    }
-                }
+                                    codeLenses.push(codeLens);
+                                }
+                            }
+                        }
+                    });
             }
 
             return codeLenses;
@@ -45,66 +61,45 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Register the command to handle code lens actions
     context.subscriptions.push(
-        vscode.commands.registerCommand('extension.gotoRoute', (routeName: string) => {
-            // Handle the code lens action, e.g., navigating to the route declaration
-            vscode.window.showInformationMessage(`Go to route: ${routeName}`);
+        vscode.commands.registerCommand('extension.gotoRoute', (routeUrl: string) => {
+            // Handle the code lens action, e.g., opening the route URL in the browser
+            vscode.env.openExternal(vscode.Uri.parse(routeUrl));
         })
     );
 }
 
-function findControllerActionLine(document: vscode.TextDocument, startLine: number): number {
-    // Implement the logic to find the corresponding controller action based on the route
-    // You may use a custom logic or regular expressions to find the controller and action names
+function parseRoutes(routesOutput: string): Route[] {
+    const routes: Route[] = [];
+    const lines = routesOutput.split('\n');
 
-    // Here's a sample implementation to find the controller action in a Rails convention
-    const currentLine = document.lineAt(startLine).text;
-    const controllerPattern = /def\s+(\w+)/g;
-    const match = controllerPattern.exec(currentLine);
-    if (match) {
-        const action = match[1];
-        const controllerLine = findControllerLine(document, startLine);
-        if (controllerLine !== -1) {
-            const controllerName = extractControllerName(document, controllerLine);
-            if (controllerName) {
-                // Assuming the controller and action are in the same line
-                const controllerActionLine = document.lineAt(controllerLine).text.indexOf(`${controllerName}#${action}`);
-                if (controllerActionLine !== -1) {
-                    return controllerLine;
-                }
-            }
+    // Remove the header line
+    lines.shift();
+
+    for (const line of lines) {
+        const [, method, url, , controllerAction] = line.split(/\s+/);
+        if (method && url && controllerAction) {
+            const [controller, action] = controllerAction.split('#');
+            routes.push({ method, url, controller, action });
         }
     }
-
-    return -1;
+    console.log('routes: ', routes);
+    return routes;
 }
 
-function findControllerLine(document: vscode.TextDocument, startLine: number): number {
-    // Implement the logic to find the line number where the controller is defined
-    // You may use a custom logic or regular expressions to find the controller name
+function findRouteForAction(routes: Route[], action: string): Route | undefined {
+    // Implement the logic to find the route for the given controller action
+    // You may use a custom logic or matching patterns to find the route
 
-    // Here's a sample implementation to find the controller line in a Rails convention
-    for (let line = startLine - 1; line >= 0; line--) {
-        const { text } = document.lineAt(line);
-        if (text.includes('class') && text.includes('Controller')) {
-            return line;
-        }
-    }
-
-    return -1;
+    // Here's a sample implementation that matches the action with the route controller and action names
+    console.log('matching: ', routes.find((route) => route.action === action), 'ACTION',action);
+    return routes.find((route) => route.action === action);
 }
 
-function extractControllerName(document: vscode.TextDocument, line: number): string | null {
-    // Implement the logic to extract the controller name from the line
-    // You may use a custom logic or regular expressions to extract the controller name
-
-    // Here's a sample implementation to extract the controller name in a Rails convention
-    const controllerPattern = /class\s+(\w+)Controller/g;
-    const match = controllerPattern.exec(document.lineAt(line).text);
-    if (match) {
-        return match[1];
-    }
-
-    return null;
+interface Route {
+    method: string;
+    url: string;
+    controller: string;
+    action: string;
 }
 
 export function deactivate() {}

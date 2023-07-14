@@ -1,23 +1,33 @@
 {
-  "name": "route-map",
-  "displayName": "Route Map",
-  "description": "testing route map",
+  "name": "ruby-method-codelens",
+  "displayName": "Ruby Method CodeLens",
   "version": "0.0.1",
+  "description": "Displays Ruby method names in capital letters in CodeLens.",
   "engines": {
-    "vscode": "^1.80.0"
+    "vscode": "^1.56.0"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onLanguage:ruby"
+  ],
   "main": "./out/extension.js",
   "contributes": {
-    "commands": [
+    "languages": [
       {
-        "command": "route-map.helloWorld",
-        "title": "Hello World"
+        "id": "ruby",
+        "extensions": [
+          ".rb",
+          ".ruby"
+        ]
       }
-    ]
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Ruby Method CodeLens",
+      "properties": {}
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
