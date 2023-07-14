@@ -1,71 +1,62 @@
 import * as vscode from 'vscode';
 import { exec } from 'child_process';
-import * as path from 'path';
 
 export function activate(context: vscode.ExtensionContext) {
-    // Register a code lens provider
-    const codeLensProvider = vscode.languages.registerCodeLensProvider('ruby', {
-        provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken) {
-            const codeLenses: vscode.CodeLens[] = [];
-
-            const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
-            if (workspaceFolder) {
-                const workspacePath = workspaceFolder.uri.fsPath;
-                console.log('document',document.fileName);
-                    exec('rails routes', { cwd: workspacePath }, (error, stdout) => {
-                        if (error) {
-                            vscode.window.showErrorMessage(`Error running 'rails routes' command: ${error.message}`);
-                            return;
-                        }
-                        // console.log("stdout: " + stdout);
-                        const routes = parseRoutes(stdout);
-
-                        // Iterate over each line in the document
-                        for (let line = 0; line < document.lineCount; line++) {
-                            const { text } = document.lineAt(line);
-
-                            // Match the controller action
-                            const match = /def\s+(\w+)/.exec(text);
-                            if (match) {
-                                const action = match[1];
-
-                                // Find the corresponding route
-                                const route = findRouteForAction(routes, action);
-                                console.log("route: " + route);
-                                if (route) {
-                                    console.log('route found', route);
-                                    const codeLensRange = new vscode.Range(line, 0, line, 0);
-                                    const codeLens = new vscode.CodeLens(codeLensRange);
-
-                                    // Set the code lens command and its title
-                                    console.log('route.url', route.url);
-                                    codeLens.command = {
-                                        title: `Go to route: ${route.url}`,
-                                        command: 'extension.gotoRoute',
-                                        arguments: [route.url],
-                                    };
-
-                                    codeLenses.push(codeLens);
-                                }
-                            }
-                        }
-                    });
-            }
-
-            return codeLenses;
-        }
-    });
-
-    // Register the code lens provider
-    context.subscriptions.push(codeLensProvider);
-
-    // Register the command to handle code lens actions
+    // Register a CodeLens provider
+    const codeLensProvider = new RubyMethodCodeLensProvider();
     context.subscriptions.push(
-        vscode.commands.registerCommand('extension.gotoRoute', (routeUrl: string) => {
-            // Handle the code lens action, e.g., opening the route URL in the browser
-            vscode.env.openExternal(vscode.Uri.parse(routeUrl));
-        })
+        vscode.languages.registerCodeLensProvider('ruby', codeLensProvider)
     );
+}
+
+class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
+    provideCodeLenses(
+        document: vscode.TextDocument,
+        token: vscode.CancellationToken
+    ): vscode.ProviderResult<vscode.CodeLens[]> {
+        const codeLenses: vscode.CodeLens[] = [];
+
+        const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
+        if (workspaceFolder) {
+            const workspacePath = workspaceFolder.uri.fsPath;
+            exec('rails routes', { cwd: workspacePath }, (error, stdout) => {
+                if (error) {
+                    vscode.window.showErrorMessage(`Error running 'rails routes' command: ${error.message}`);
+                    return;
+                }
+
+                const routes = parseRoutes(stdout);
+
+                // Iterate over each line in the document
+                for (let line = 0; line < document.lineCount; line++) {
+                    const { text } = document.lineAt(line);
+
+                    // Match the controller action
+                    const match = /def\s+(\w+)/.exec(text);
+                    if (match) {
+                        const action = match[1];
+
+                        // Find the corresponding route
+                        const route = findRouteForAction(routes, action);
+                        if (route) {
+                            const codeLensRange = new vscode.Range(line, 0, line, 0);
+                            const codeLens = new vscode.CodeLens(codeLensRange);
+                            // Set the code lens command and its title
+                            console.log(`${route.url}: /${route.controller}/${route.action}`);
+                            codeLens.command = {
+                                title: `${route.url}: /${route.controller}/${route.action}`,
+                                command: 'extension.gotoRoute'
+                            };
+                            console.log("codeLens.command" + codeLens.command.title);
+                            codeLenses.push(codeLens);
+                        }
+                    }
+                }
+            });
+        }
+
+        return codeLenses;
+    }
 }
 
 function parseRoutes(routesOutput: string): Route[] {
@@ -82,7 +73,7 @@ function parseRoutes(routesOutput: string): Route[] {
             routes.push({ method, url, controller, action });
         }
     }
-    console.log('routes: ', routes);
+    console.log('ROUTES: ', routes);
     return routes;
 }
 
@@ -91,7 +82,6 @@ function findRouteForAction(routes: Route[], action: string): Route | undefined 
     // You may use a custom logic or matching patterns to find the route
 
     // Here's a sample implementation that matches the action with the route controller and action names
-    console.log('matching: ', routes.find((route) => route.action === action), 'ACTION',action);
     return routes.find((route) => route.action === action);
 }
 
