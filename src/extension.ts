@@ -4,9 +4,17 @@ import * as fs from 'fs';
 
 export function activate(context: vscode.ExtensionContext) {
     const codeLensProvider = new RubyMethodCodeLensProvider();
-    context.subscriptions.push(
-        vscode.languages.registerCodeLensProvider('ruby', codeLensProvider)
-    );
+    const codeLensDisposable = vscode.languages.registerCodeLensProvider('ruby', codeLensProvider);
+    context.subscriptions.push(codeLensDisposable);
+
+    const activeEditorDisposable = vscode.window.onDidChangeActiveTextEditor(async (editor) => {
+        if (editor) {
+            const document = editor.document;
+            codeLensProvider.updateCodeLenses(document);
+        }
+    });
+    context.subscriptions.push(activeEditorDisposable);
+
     context.subscriptions.push(
         vscode.commands.registerCommand('extension.openView', (filePath: string) => {
             vscode.workspace.openTextDocument(filePath)
@@ -18,10 +26,17 @@ export function activate(context: vscode.ExtensionContext) {
 class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
     private routesCache: Map<string, Route[]> = new Map<string, Route[]>();
 
+    private cachedCodeLenses: Map<string, vscode.CodeLens[]> = new Map<string, vscode.CodeLens[]>();
+
     async provideCodeLenses(
         document: vscode.TextDocument,
         token: vscode.CancellationToken
     ): Promise<vscode.CodeLens[]> {
+        const cachedCodeLenses = this.getCachedCodeLenses(document.uri);
+        if (cachedCodeLenses) {
+            return cachedCodeLenses;
+        }
+
         const codeLenses: vscode.CodeLens[] = [];
         const isControllerFile = document.fileName.endsWith('_controller.rb');
         if (!isControllerFile) {
@@ -34,35 +49,36 @@ class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
         try {
             const controller = /app\/controllers\/(.*?)_controller\.rb/.exec(document.fileName)![1];
             const routes = await this.getRoutes(workspacePath, controller);
+            console.time(`${controller}`);
 
-            await Promise.all(
-                document
-                    .getText()
-                    .split('\n')
-                    .map(async (lineText, lineIndex) => {
-                        const match = /def\s+(\w+)/.exec(lineText);
-                        if (match) {
-                            const action = match[1];
-                            const route = findRouteForAction(routes, action, controller);
-                            if (route) {
-                                const codeLensRange = new vscode.Range(lineIndex, 0, lineIndex, 0);
-                                const codeLens = new vscode.CodeLens(codeLensRange);
-                                const viewFilePath = await getViewFilePath(workspacePath!, route.controller, route.action);
-                                codeLens.command = {
-                                    title: `🌐 ${route.url} | ${route.pattern}`,
-                                    command: ''
-                                };
-                                if(viewFilePath !== ''){
-                                    codeLens.command.title= `🌐 ${route.url} | ${route.pattern} 👁️`;
-                                    codeLens.command.command = `extension.openView`;
-                                    codeLens.command.arguments = [viewFilePath];
-                                    codeLens.command.tooltip = `navigate to view: ${controller}#${action}`;
-                                }
-                                codeLenses.push(codeLens);
-                            }
+            const promises = document.getText().split('\n').map(async (lineText, lineIndex) => {
+                const match = /def\s+(\w+)/.exec(lineText);
+                if (match) {
+                    const action = match[1];
+                    const route = findRouteForAction(routes, action, controller);
+                    if (route) {
+                        const codeLensRange = new vscode.Range(lineIndex, 0, lineIndex, 0);
+                        const codeLens = new vscode.CodeLens(codeLensRange);
+                        const viewFilePath = await getViewFilePath(workspacePath!, route.controller, route.action);
+                        codeLens.command = {
+                            title: `🌐 ${route.url} | ${route.pattern}`,
+                            command: ''
+                        };
+                        if (viewFilePath !== '') {
+                            codeLens.command.title = `🌐 ${route.url} | ${route.pattern} 👁️`;
+                            codeLens.command.command = `extension.openView`;
+                            codeLens.command.arguments = [viewFilePath];
+                            codeLens.command.tooltip = `navigate to view: ${controller}#${action}`;
                         }
-                    })
-            );
+                        codeLenses.push(codeLens);
+                    }
+                }
+            });
+
+            await Promise.all(promises);
+            console.timeEnd(`${controller}`);
+
+            this.setCachedCodeLenses(document.uri, codeLenses);
             return codeLenses;
         } catch (error) {
             console.error(`Error running 'rails routes' command: ${error}`);
@@ -71,6 +87,22 @@ class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
         }
     }
 
+    public updateCodeLenses(document: vscode.TextDocument) {
+        this.clearCachedCodeLenses(document.uri);
+    }
+
+    private getCachedCodeLenses(uri: vscode.Uri): vscode.CodeLens[] | undefined {
+        return this.cachedCodeLenses.get(uri.toString());
+    }
+
+    private setCachedCodeLenses(uri: vscode.Uri, codeLenses: vscode.CodeLens[]) {
+        this.cachedCodeLenses.set(uri.toString(), codeLenses);
+    }
+
+    private clearCachedCodeLenses(uri: vscode.Uri) {
+        this.cachedCodeLenses.delete(uri.toString());
+    }
+    
     private async getRoutes(workspacePath: string | undefined, controller: string): Promise<Route[]> {
         const cacheKey = `${workspacePath}:${controller}`;
 
