@@ -32,8 +32,7 @@ class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
         const workspacePath = workspaceFolder?.uri.fsPath;
 
         try {
-            const controllerFile = document.fileName;
-            const controller = /app\/controllers\/(.*?)_controller\.rb/.exec(controllerFile)![1];
+            const controller = /app\/controllers\/(.*?)_controller\.rb/.exec(document.fileName)![1];
             const routes = await this.getRoutes(workspacePath, controller);
 
             await Promise.all(
@@ -54,6 +53,7 @@ class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
                                     command: ''
                                 };
                                 if(viewFilePath !== ''){
+                                    codeLens.command.title= `🌐 ${route.url} | ${route.pattern} 👁️`;
                                     codeLens.command.command = `extension.openView`;
                                     codeLens.command.arguments = [viewFilePath];
                                     codeLens.command.tooltip = `navigate to view: ${controller}#${action}`;
@@ -125,7 +125,7 @@ function parseRoutes(routesOutput: string): Route[] {
 }
 
 function findRouteForAction(routes: Route[], action: string, controller: string): Route | undefined {
-    const matchedRoutes = routes.filter((route) => {
+    return routes.find((route) => {
         const routeController = route.controller.toLowerCase();
         const routeAction = route.action.toLowerCase();
         const inputController = controller.toLowerCase();
@@ -133,8 +133,6 @@ function findRouteForAction(routes: Route[], action: string, controller: string)
 
         return routeController === inputController && routeAction === inputAction;
     });
-
-    return matchedRoutes[0];
 }
 
 async function fileExists(filePath: string): Promise<boolean> {

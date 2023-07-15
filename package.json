@@ -1,8 +1,8 @@
 {
-  "name": "ruby-routes-codelens",
-  "displayName": "Ruby Routes CodeLens",
+  "name": "rails-routes-codelens",
+  "displayName": "Rails Routes CodeLens",
   "version": "0.0.3",
-  "description": "Shows routes above their controller actions",
+  "description": "Shows Rails routes above their controller actions",
   "repository": "git@github.com:Anx450z/route-map.git",
   "engines": {
     "vscode": "^1.80.0"

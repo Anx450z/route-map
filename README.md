@@ -1,41 +1,40 @@
-# Rails Routes CodeLens Extension for Visual Studio Code
+# Rails Route Codelens
 
-This Visual Studio Code extension provides code lenses above Rails controller actions, displaying the corresponding routes defined in your Rails application. It allows you to easily navigate between routes and their associated controller actions within your Ruby files.
+## Description
+
+Rails Route Codelens is a Visual Studio Code extension that provides code lenses for Ruby on Rails controller files. It enhances the development workflow by displaying code lenses that allow quick navigation to corresponding view files.
 
 ## Features
 
-- Displays code lenses above Rails controller actions.
-- Shows the route names in the code lenses.
-- Clicking on a code lens navigates to the corresponding route declaration.
+- Generates code lenses for Ruby on Rails controller files.
+- Links code lenses to corresponding view files for quick navigation.
 
 ## Requirements
 
-- Visual Studio Code
+- Visual Studio Code (version 1.80.0 or higher)
+- Ruby on Rails (version 3.0.X or higher)
 
 ## Installation
 
-1. Open Visual Studio Code.
-2. Go to the Extensions view (Ctrl+Shift+X).
-3. Search for "Rails Routes CodeLens" and click Install.
-4. Reload Visual Studio Code to activate the extension.
+1. Launch Visual Studio Code.
+2. Open the Extensions view by clicking on the square icon in the left sidebar or pressing `Ctrl+Shift+X`.
+3. Search for `Rails Route Codelens` and click Install.
+4. Restart Visual Studio Code.
 
 ## Usage
 
-1. Open a Ruby file containing your Rails routes and corresponding controller actions.
-2. The extension will analyze the file and display code lenses above the controller actions.
-3. Click on a code lens to navigate to the corresponding route declaration.
+1. Open a Ruby on Rails controller file.
+2. Code lenses will be displayed above each action defined in the controller.
+3. Click on a code lens to navigate to the corresponding view file.
 
-## Customization
+## Configuration
 
-If your Rails conventions differ from the default assumptions made by the extension, you can customize the logic for finding controller actions and route declarations. Modify the `findControllerActionLine`, `findControllerLine`, and `findRouteLine` functions in the `extension.ts` file to fit your specific requirements.
+Rails Route Codelens does not require any additional configuration.
+
+## Known Issues
+
+There are no known issues at the moment. If you encounter any problems or have suggestions for improvement, please create an issue in the [GitHub repository](git@github.com:Anx450z/route-map.git).
 
 ## License
 
-This extension is licensed under the [MIT License]
-
-## Feedback
-
-If you have any feedback or questions, please feel free to reach out. You can contact us at your-email@example.com.
-
-Enjoy using the Rails Routes CodeLens Extension!
-
+This extension is licensed under the [MIT License](LICENSE.md).
