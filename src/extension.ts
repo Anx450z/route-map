@@ -23,13 +23,18 @@ class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
         token: vscode.CancellationToken
     ): Promise<vscode.CodeLens[]> {
         const codeLenses: vscode.CodeLens[] = [];
+        const isControllerFile = document.fileName.endsWith('_controller.rb');
+        if (!isControllerFile) {
+            return codeLenses;
+        }
 
         const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
         const workspacePath = workspaceFolder?.uri.fsPath;
 
         try {
-            const controllerFile = document.fileName.split('/').pop();
-            const controller = /(.+)_controller\.rb/.exec(controllerFile!)![1];
+            const controllerFile = document.fileName;
+            const controller =/app\/controllers\/(.*?)_controller\.rb/.exec(controllerFile)![1];
+            console.log('controller: ' + controller);
             const routes = await this.getRoutes(workspacePath, controller);
 
             for (let line = 0; line < document.lineCount; line++) {
@@ -67,10 +72,12 @@ class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
         const cacheKey = `${workspacePath}:${controller}`;
 
         if (this.routesCache.has(cacheKey)) {
+            console.log('using cache');
             return this.routesCache.get(cacheKey)!;
         }
 
         try {
+            console.log('not using cache');
             const stdout = await runRailsRoutesCommand(workspacePath, controller);
             const routes = parseRoutes(stdout);
             this.routesCache.set(cacheKey, routes);
@@ -118,7 +125,7 @@ function parseRoutes(routesOutput: string): Route[] {
 
 function findRouteForAction(routes: Route[], action: string, controller: string): Route | undefined {
     const matchedRoutes = routes.filter((route) => {
-        const routeController = route.controller.split('/').pop()!.toLowerCase();
+        const routeController = route.controller.toLowerCase();
         const routeAction = route.action.toLowerCase();
         const inputController = controller.toLowerCase();
         const inputAction = action.toLowerCase();
