@@ -1,8 +1,9 @@
 {
   "name": "ruby-method-codelens",
   "displayName": "Ruby Method CodeLens",
-  "version": "0.0.1",
-  "description": "Displays Ruby method names in capital letters in CodeLens.",
+  "version": "0.0.3",
+  "description": "Shows routes above their controller actions",
+  "repository": "git@github.com:Anx450z/route-map.git",
   "engines": {
     "vscode": "^1.80.0"
   },
