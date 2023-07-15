@@ -33,8 +33,4 @@ Rails Route Codelens does not require any additional configuration.
 
 ## Known Issues
 
-There are no known issues at the moment. If you encounter any problems or have suggestions for improvement, please create an issue in the [GitHub repository](git@github.com:Anx450z/route-map.git).
-
-## License
-
-This extension is licensed under the [MIT License](LICENSE.md).
+There are no known issues at the moment. If you encounter any problems or have suggestions for improvement, please create an issue in the `<git@github.com>:anx450z/route-map.git.

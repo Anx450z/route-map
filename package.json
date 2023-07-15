@@ -4,6 +4,7 @@
   "version": "0.0.3",
   "description": "Shows Rails routes above their controller actions",
   "repository": "git@github.com:Anx450z/route-map.git",
+  "publisher": "anx450z",
   "engines": {
     "vscode": "^1.80.0"
   },
