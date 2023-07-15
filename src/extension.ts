@@ -51,15 +51,18 @@ class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
                                 const viewFilePath = await getViewFilePath(workspacePath!, route.controller, route.action);
                                 codeLens.command = {
                                     title: `🌐 ${route.url} | ${route.pattern}`,
-                                    command: 'extension.openView',
-                                    arguments: [viewFilePath],
+                                    command: ''
                                 };
+                                if(viewFilePath !== ''){
+                                    codeLens.command.command = `extension.openView`;
+                                    codeLens.command.arguments = [viewFilePath];
+                                    codeLens.command.tooltip = `navigate to view: ${controller}#${action}`;
+                                }
                                 codeLenses.push(codeLens);
                             }
                         }
                     })
             );
-
             return codeLenses;
         } catch (error) {
             console.error(`Error running 'rails routes' command: ${error}`);
@@ -144,16 +147,15 @@ async function fileExists(filePath: string): Promise<boolean> {
 }
 
 async function getViewFilePath(workspacePath: string, controller: string, action: string): Promise<string> {
-    const viewFilePath = `${workspacePath}/app/views/${controller}/${action}.html.erb`;
-    const jbuilderFilePath = `${workspacePath}/app/views/${controller}/${action}.json.jbuilder`;
+    const viewFilePath = `${workspacePath}/app/views/${controller}/${action}`;
 
-    if (await fileExists(viewFilePath)) {
-        return viewFilePath;
-    } else if (await fileExists(jbuilderFilePath)) {
-        return jbuilderFilePath;
+    if (await fileExists(viewFilePath + '.html.erb')) {
+        return viewFilePath + '.html.erb';
+    } else if (await fileExists(viewFilePath + '.json.jbuilder')) {
+        return viewFilePath + '.json.jbuilder';
     } else {
         vscode.window.showWarningMessage(`No view file found for ${controller}#${action}`);
-        return '';
+        return ``;
     }
 }
 
