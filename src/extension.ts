@@ -49,7 +49,6 @@ class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
         try {
             const controller = /app\/controllers\/(.*?)_controller\.rb/.exec(document.fileName)![1];
             const routes = await this.getRoutes(workspacePath, controller);
-            console.time(`${controller}`);
 
             const promises = document.getText().split('\n').map(async (lineText, lineIndex) => {
                 const match = /def\s+(\w+)/.exec(lineText);
@@ -61,11 +60,11 @@ class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
                         const codeLens = new vscode.CodeLens(codeLensRange);
                         const viewFilePath = await getViewFilePath(workspacePath!, route.controller, route.action);
                         codeLens.command = {
-                            title: `🌐 ${route.url} | ${route.pattern}`,
+                            title: `🌐 ${route.url} | ${route.pattern} | ${route.verb}`,
                             command: ''
                         };
                         if (viewFilePath !== '') {
-                            codeLens.command.title = `🌐 ${route.url} | ${route.pattern} 👁️`;
+                            codeLens.command.title = `🌐 ${route.url} | ${route.pattern} 👁️ | ${route.verb}`;
                             codeLens.command.command = `extension.openView`;
                             codeLens.command.arguments = [viewFilePath];
                             codeLens.command.tooltip = `navigate to view: ${controller}#${action}`;
@@ -76,7 +75,6 @@ class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
             });
 
             await Promise.all(promises);
-            console.timeEnd(`${controller}`);
 
             this.setCachedCodeLenses(document.uri, codeLenses);
             return codeLenses;
@@ -149,7 +147,7 @@ function parseRoutes(routesOutput: string): Route[] {
         } else if (count === 4) {
             const [, url, pattern, controllerAction] = line.split(/\s+/);
             const [controller, action] = controllerAction.split('#');
-            const verb = 'not found';
+            const verb = '';
             routes.push({ verb, url, pattern, controller, action });
         }
     }
