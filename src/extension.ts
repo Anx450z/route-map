@@ -33,32 +33,32 @@ class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
 
         try {
             const controllerFile = document.fileName;
-            const controller =/app\/controllers\/(.*?)_controller\.rb/.exec(controllerFile)![1];
-            console.log('controller: ' + controller);
+            const controller = /app\/controllers\/(.*?)_controller\.rb/.exec(controllerFile)![1];
             const routes = await this.getRoutes(workspacePath, controller);
 
-            for (let line = 0; line < document.lineCount; line++) {
-                const { text } = document.lineAt(line);
-                const match = /def\s+(\w+)/.exec(text);
-
-                if (match) {
-                    const action = match[1];
-                    const route = findRouteForAction(routes, action, controller);
-
-                    if (route) {
-                        const codeLensRange = new vscode.Range(line, 0, line, 0);
-                        const codeLens = new vscode.CodeLens(codeLensRange);
-                        const viewFilePath = await getViewFilePath(route.controller, route.action);
-                        console.log("final: ", viewFilePath);
-                        codeLens.command = {
-                            title: `🌐 ${route.url} | ${route.pattern}`,
-                            command: 'extension.openView',
-                            arguments: [viewFilePath],
-                        };
-                        codeLenses.push(codeLens);
-                    }
-                }
-            }
+            await Promise.all(
+                document
+                    .getText()
+                    .split('\n')
+                    .map(async (lineText, lineIndex) => {
+                        const match = /def\s+(\w+)/.exec(lineText);
+                        if (match) {
+                            const action = match[1];
+                            const route = findRouteForAction(routes, action, controller);
+                            if (route) {
+                                const codeLensRange = new vscode.Range(lineIndex, 0, lineIndex, 0);
+                                const codeLens = new vscode.CodeLens(codeLensRange);
+                                const viewFilePath = await getViewFilePath(workspacePath!, route.controller, route.action);
+                                codeLens.command = {
+                                    title: `🌐 ${route.url} | ${route.pattern}`,
+                                    command: 'extension.openView',
+                                    arguments: [viewFilePath],
+                                };
+                                codeLenses.push(codeLens);
+                            }
+                        }
+                    })
+            );
 
             return codeLenses;
         } catch (error) {
@@ -72,12 +72,10 @@ class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
         const cacheKey = `${workspacePath}:${controller}`;
 
         if (this.routesCache.has(cacheKey)) {
-            console.log('using cache');
             return this.routesCache.get(cacheKey)!;
         }
 
         try {
-            console.log('not using cache');
             const stdout = await runRailsRoutesCommand(workspacePath, controller);
             const routes = parseRoutes(stdout);
             this.routesCache.set(cacheKey, routes);
@@ -116,7 +114,7 @@ function parseRoutes(routesOutput: string): Route[] {
         } else if (count === 4) {
             const [, url, pattern, controllerAction] = line.split(/\s+/);
             const [controller, action] = controllerAction.split('#');
-            const verb = "not found";
+            const verb = 'not found';
             routes.push({ verb, url, pattern, controller, action });
         }
     }
@@ -145,14 +143,14 @@ async function fileExists(filePath: string): Promise<boolean> {
     }
 }
 
-async function getViewFilePath(controller: string, action: string): Promise<string> {
-    const viewFilePath = vscode.Uri.file(vscode.workspace.rootPath + `/app/views/${controller}/${action}.html.erb`);
-    const jbuilderFilePath = vscode.Uri.file(vscode.workspace.rootPath + `/app/views/${controller}/${action}.json.jbuilder`);
-    console.log("view :", jbuilderFilePath);
-    if (await fileExists(viewFilePath.fsPath)) {
-        return viewFilePath.fsPath;
-    } else if (await fileExists(jbuilderFilePath.fsPath)) {
-        return jbuilderFilePath.fsPath;
+async function getViewFilePath(workspacePath: string, controller: string, action: string): Promise<string> {
+    const viewFilePath = `${workspacePath}/app/views/${controller}/${action}.html.erb`;
+    const jbuilderFilePath = `${workspacePath}/app/views/${controller}/${action}.json.jbuilder`;
+
+    if (await fileExists(viewFilePath)) {
+        return viewFilePath;
+    } else if (await fileExists(jbuilderFilePath)) {
+        return jbuilderFilePath;
     } else {
         vscode.window.showWarningMessage(`No view file found for ${controller}#${action}`);
         return '';
