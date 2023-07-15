@@ -1,6 +1,6 @@
 {
-  "name": "ruby-method-codelens",
-  "displayName": "Ruby Method CodeLens",
+  "name": "ruby-routes-codelens",
+  "displayName": "Ruby Routes CodeLens",
   "version": "0.0.3",
   "description": "Shows routes above their controller actions",
   "repository": "git@github.com:Anx450z/route-map.git",
