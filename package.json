@@ -3,7 +3,7 @@
   "displayName": "Rails Routes CodeLens",
   "version": "1.0.1",
   "description": "Shows Rails routes above their controller actions",
-  "repository": "https://git@github.com:Anx450z/route-map.git",
+  "repository": "https://github.com/Anx450z/route-map",
   "publisher": "anx450z",
   "icon": "icons/icon.png",
   "engines": {
