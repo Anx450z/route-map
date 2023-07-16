@@ -21,6 +21,17 @@ export function activate(context: vscode.ExtensionContext) {
                 .then((document) => vscode.window.showTextDocument(document));
         })
     );
+    vscode.workspace.onDidSaveTextDocument(async (document: vscode.TextDocument) => {
+        if (document.fileName.endsWith('routes.rb')) {
+            try {
+                await updateRailsRoutesCommand();
+            } catch (error) {
+                console.error(`Error updating routes file: ${error}`);
+            }
+        }
+    });
+
+    updateRailsRoutesCommand();
 }
 
 class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
@@ -121,9 +132,24 @@ class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
     }
 }
 
+async function updateRailsRoutesCommand(): Promise<string> {
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+    const workspacePath = workspaceFolder?.uri.fsPath;
+    const outputFilePath = workspacePath + '/tmp/routes_file.txt';
+    return new Promise<string>((resolve, reject) => {
+        exec('rails routes | grep / -s > ' + outputFilePath, { cwd: workspacePath }, (error, stdout, stderr) => {
+            if (error) {
+               reject(error);
+            }else {
+                resolve(stdout);
+            }
+        });
+    });
+}
+
 function runRailsRoutesCommand(workspacePath: string | undefined, controller: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
-        exec(`rails routes | grep ${controller}#`, { cwd: workspacePath }, (error, stdout) => {
+        exec(`cat ./tmp/routes_file.txt | grep ${controller}#`, { cwd: workspacePath }, (error, stdout) => {
             if (error) {
                 reject(error);
             } else {
