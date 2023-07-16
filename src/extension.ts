@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { exec } from 'child_process';
 import * as fs from 'fs';
+import * as path from 'path';
 
 export function activate(context: vscode.ExtensionContext) {
     const codeLensProvider = new RubyMethodCodeLensProvider();
@@ -135,7 +136,7 @@ class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
 async function updateRailsRoutesCommand(): Promise<string> {
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
     const workspacePath = workspaceFolder?.uri.fsPath;
-    const outputFilePath = workspacePath + '/tmp/routes_file.txt';
+    const outputFilePath = path.join(workspacePath || '', 'tmp', 'routes_file.txt');
     return new Promise<string>((resolve, reject) => {
         exec('rails routes | grep / -s > ' + outputFilePath, { cwd: workspacePath }, (error, stdout, stderr) => {
             if (error) {
@@ -201,7 +202,7 @@ async function fileExists(filePath: string): Promise<boolean> {
 }
 
 async function getViewFilePath(workspacePath: string, controller: string, action: string): Promise<string> {
-    const viewFilePath = `${workspacePath}/app/views/${controller}/${action}`;
+    const viewFilePath = path.join(workspacePath, 'app','views',controller,action);
 
     if (await fileExists(viewFilePath + '.html.erb')) {
         return viewFilePath + '.html.erb';
