@@ -9,6 +9,10 @@ Rails Route Codelens is a Visual Studio Code extension that provides code lenses
 - Generates code lenses for Ruby on Rails controller files.
 - Links code lenses to corresponding view files for quick navigation.
 
+## Screenshots
+
+![screenshot](./screenshots/screenshot1.png)
+
 ## Requirements
 
 - Visual Studio Code (version 1.80.0 or higher)
