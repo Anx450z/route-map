@@ -3,7 +3,7 @@ import { exec } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
     const codeLensProvider = new RubyMethodCodeLensProvider();
     const codeLensDisposable = vscode.languages.registerCodeLensProvider('ruby', codeLensProvider);
     context.subscriptions.push(codeLensDisposable);
@@ -31,8 +31,12 @@ export function activate(context: vscode.ExtensionContext) {
             }
         }
     });
-
-    updateRailsRoutesCommand();
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+    const workspacePath = workspaceFolder?.uri.fsPath;
+    const outputFilePath = path.join(workspacePath || '', 'tmp', 'routes_file.txt');
+    if (!await fileExists(outputFilePath)) {
+        updateRailsRoutesCommand();
+    }
 }
 
 class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
@@ -76,7 +80,7 @@ class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
                             command: ''
                         };
                         if (viewFilePath !== '') {
-                            codeLens.command.title = `🌐 ${route.url} | ${route.pattern} 👁️ | ${route.verb}`;
+                            codeLens.command.title = `🌐 ${route.url} | ${route.pattern} | ${route.verb} 👁️`;
                             codeLens.command.command = `extension.openView`;
                             codeLens.command.arguments = [viewFilePath];
                             codeLens.command.tooltip = `navigate to view: ${controller}#${action}`;
