@@ -1,7 +1,7 @@
 {
   "name": "rails-routes-codelens",
   "displayName": "Rails Routes CodeLens",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Shows Rails routes above their controller actions",
   "repository": "https://github.com/Anx450z/route-map",
   "publisher": "anx450z",

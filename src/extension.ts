@@ -154,7 +154,8 @@ async function updateRailsRoutesCommand(): Promise<string> {
 
 function runRailsRoutesCommand(workspacePath: string | undefined, controller: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
-        exec(`cat ./tmp/routes_file.txt | grep ${controller}#`, { cwd: workspacePath }, (error, stdout) => {
+        const routeFilePath = path.join(workspacePath || '', 'tmp', 'routes_file.txt')
+        exec(`cat ${routeFilePath} | grep ${controller}#`, { cwd: workspacePath }, (error, stdout) => {
             if (error) {
                 reject(error);
             } else {
@@ -213,7 +214,6 @@ async function getViewFilePath(workspacePath: string, controller: string, action
     } else if (await fileExists(viewFilePath + '.json.jbuilder')) {
         return viewFilePath + '.json.jbuilder';
     } else {
-        vscode.window.showWarningMessage(`No view file found for ${controller}#${action}`);
         return ``;
     }
 }
