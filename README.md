@@ -15,8 +15,9 @@ Rails Route Codelens is a Visual Studio Code extension that provides code lenses
 
 ## Requirements
 
-- Visual Studio Code (version 1.80.0 or higher)
+- Visual Studio Code (version 1.76.0 or higher)
 - Ruby on Rails (version 3.0.X or higher)
+- make sure 'rails routes' command executes in terminal without errors
 
 ## Installation
 
