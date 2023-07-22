@@ -76,11 +76,11 @@ class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
                         const codeLens = new vscode.CodeLens(codeLensRange);
                         const viewFilePath = await getViewFilePath(workspacePath!, route.controller, route.action);
                         codeLens.command = {
-                            title: `🌐 ${route.url} | ${route.pattern} | ${route.verb}`,
+                            title: `🌐 ${route.url} | ${route.refinedPattern} | ${route.verb}`,
                             command: ''
                         };
                         if (viewFilePath !== '') {
-                            codeLens.command.title = `🌐 ${route.url} | ${route.pattern} | ${route.verb} 👁️`;
+                            codeLens.command.title = `🌐 ${route.url} | ${route.refinedPattern} | ${route.verb} 👁️`;
                             codeLens.command.command = `extension.openView`;
                             codeLens.command.arguments = [viewFilePath];
                             codeLens.command.tooltip = `navigate to view: ${controller}#${action}`;
@@ -175,12 +175,14 @@ function parseRoutes(routesOutput: string): Route[] {
         if (count === 5) {
             const [, verb, url, pattern, controllerAction] = line.split(/\s+/);
             const [controller, action] = controllerAction.split('#');
-            routes.push({ verb, url, pattern, controller, action });
+            const refinedPattern = pattern.split('(.:format)')[0]
+            routes.push({ verb, url, refinedPattern, controller, action });
         } else if (count === 4) {
             const [, url, pattern, controllerAction] = line.split(/\s+/);
             const [controller, action] = controllerAction.split('#');
             const verb = '';
-            routes.push({ verb, url, pattern, controller, action });
+            const refinedPattern = pattern.split('(.:format)')[0]
+            routes.push({ verb, url, refinedPattern, controller, action });
         }
     }
     return routes;
@@ -223,7 +225,7 @@ interface Route {
     url: string;
     controller: string;
     action: string;
-    pattern: string;
+    refinedPattern: string;
 }
 
 export function deactivate() {}
