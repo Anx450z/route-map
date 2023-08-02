@@ -33,8 +33,6 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
-    private routesCache: Map<string, Route[]> = new Map<string, Route[]>();
-
     async provideCodeLenses(
         document: vscode.TextDocument,
         token: vscode.CancellationToken
@@ -88,16 +86,9 @@ class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
     }
     
     private async getRoutes(workspacePath: string | undefined, controller: string): Promise<Route[]> {
-        const cacheKey = `${workspacePath}:${controller}`;
-
-        if (this.routesCache.has(cacheKey)) {
-            return this.routesCache.get(cacheKey)!;
-        }
-
         try {
             const stdout = await runRailsRoutesCommand(workspacePath, controller);
             const routes = parseRoutes(stdout);
-            this.routesCache.set(cacheKey, routes);
             return routes;
         } catch (error) {
             console.error(`Error running 'rails routes' command: ${error}`);
