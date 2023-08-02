@@ -113,8 +113,9 @@ async function updateRailsRoutesCommand(): Promise<string> {
     const workspacePath = workspaceFolder?.uri.fsPath;
     const outputFilePath = path.join(workspacePath || '', 'tmp', 'routes_file.txt');
     return new Promise<string>((resolve, reject) => {
-        exec('rails routes | grep / -s > ' + outputFilePath, { cwd: workspacePath }, (error, stdout, stderr) => {
+        exec('rails routes > ' + outputFilePath, { cwd: workspacePath }, (error, stdout, stderr) => {
             if (error) {
+               console.error('error running rails routes command: ', stderr);
                vscode.window.showWarningMessage('Failed to execute rails route command');
                reject(error);
             }else {
