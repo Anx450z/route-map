@@ -5,16 +5,9 @@ import * as path from 'path';
 
 export async function activate(context: vscode.ExtensionContext) {
     const codeLensProvider = new RubyMethodCodeLensProvider();
-    const codeLensDisposable = vscode.languages.registerCodeLensProvider('ruby', codeLensProvider);
-    context.subscriptions.push(codeLensDisposable);
-
-    const activeEditorDisposable = vscode.window.onDidChangeActiveTextEditor(async (editor) => {
-        if (editor) {
-            const document = editor.document;
-            codeLensProvider.updateCodeLenses(document);
-        }
-    });
-    context.subscriptions.push(activeEditorDisposable);
+    context.subscriptions.push(
+        vscode.languages.registerCodeLensProvider('ruby', codeLensProvider)
+    );
 
     context.subscriptions.push(
         vscode.commands.registerCommand('extension.openView', (filePath: string) => {
@@ -42,16 +35,10 @@ export async function activate(context: vscode.ExtensionContext) {
 class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
     private routesCache: Map<string, Route[]> = new Map<string, Route[]>();
 
-    private cachedCodeLenses: Map<string, vscode.CodeLens[]> = new Map<string, vscode.CodeLens[]>();
-
     async provideCodeLenses(
         document: vscode.TextDocument,
         token: vscode.CancellationToken
     ): Promise<vscode.CodeLens[]> {
-        const cachedCodeLenses = this.getCachedCodeLenses(document.uri);
-        if (cachedCodeLenses) {
-            return cachedCodeLenses;
-        }
 
         const codeLenses: vscode.CodeLens[] = [];
         const isControllerFile = document.fileName.endsWith('_controller.rb');
@@ -92,29 +79,12 @@ class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
 
             await Promise.all(promises);
 
-            this.setCachedCodeLenses(document.uri, codeLenses);
             return codeLenses;
         } catch (error) {
             console.error(`Error running 'rails routes' command: ${error}`);
             vscode.window.showWarningMessage('An error occurred while generating code lenses.');
             return [];
         }
-    }
-
-    public updateCodeLenses(document: vscode.TextDocument) {
-        this.clearCachedCodeLenses(document.uri);
-    }
-
-    private getCachedCodeLenses(uri: vscode.Uri): vscode.CodeLens[] | undefined {
-        return this.cachedCodeLenses.get(uri.toString());
-    }
-
-    private setCachedCodeLenses(uri: vscode.Uri, codeLenses: vscode.CodeLens[]) {
-        this.cachedCodeLenses.set(uri.toString(), codeLenses);
-    }
-
-    private clearCachedCodeLenses(uri: vscode.Uri) {
-        this.cachedCodeLenses.delete(uri.toString());
     }
     
     private async getRoutes(workspacePath: string | undefined, controller: string): Promise<Route[]> {
