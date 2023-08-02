@@ -34,8 +34,7 @@ Rails Route Codelens is a Visual Studio Code extension that provides code lenses
 
 ## Troubleshooting
 
-1. It is expected to get a warning message when extension is installed for the first time.
-2. Make sure `rails routes` command executes in your project thorough vscode without errors.
+1. Make sure `rails routes` command executes in your project thorough vscode without errors.
 
 ## Configuration
 

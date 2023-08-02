@@ -4,6 +4,21 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 export async function activate(context: vscode.ExtensionContext) {
+    await initializeExtension(context);
+    await runExtension(context);
+}
+
+async function initializeExtension(context: vscode.ExtensionContext) {
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+    const workspacePath = workspaceFolder?.uri.fsPath;
+    const outputFilePath = path.join(workspacePath || '', 'tmp', 'routes_file.txt');
+
+    if (!await fileExists(outputFilePath)) {
+        await updateRailsRoutesCommand();
+    }
+}
+
+async function runExtension(context: vscode.ExtensionContext) {
     const codeLensProvider = new RubyMethodCodeLensProvider();
     context.subscriptions.push(
         vscode.languages.registerCodeLensProvider('ruby', codeLensProvider)
@@ -15,6 +30,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 .then((document) => vscode.window.showTextDocument(document));
         })
     );
+
     vscode.workspace.onDidSaveTextDocument(async (document: vscode.TextDocument) => {
         if (document.fileName.endsWith('routes.rb')) {
             try {
@@ -24,12 +40,6 @@ export async function activate(context: vscode.ExtensionContext) {
             }
         }
     });
-    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-    const workspacePath = workspaceFolder?.uri.fsPath;
-    const outputFilePath = path.join(workspacePath || '', 'tmp', 'routes_file.txt');
-    if (!await fileExists(outputFilePath)) {
-        updateRailsRoutesCommand();
-    }
 }
 
 class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
@@ -105,6 +115,7 @@ async function updateRailsRoutesCommand(): Promise<string> {
     return new Promise<string>((resolve, reject) => {
         exec('rails routes | grep / -s > ' + outputFilePath, { cwd: workspacePath }, (error, stdout, stderr) => {
             if (error) {
+               vscode.window.showWarningMessage('Failed to execute rails route command');
                reject(error);
             }else {
                 resolve(stdout);
@@ -115,7 +126,7 @@ async function updateRailsRoutesCommand(): Promise<string> {
 
 function runRailsRoutesCommand(workspacePath: string | undefined, controller: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
-        const routeFilePath = path.join(workspacePath || '', 'tmp', 'routes_file.txt')
+        const routeFilePath = path.join(workspacePath || '', 'tmp', 'routes_file.txt');
         exec(`cat ${routeFilePath} | grep ${controller}#`, { cwd: workspacePath }, (error, stdout) => {
             if (error) {
                 reject(error);
@@ -136,13 +147,13 @@ function parseRoutes(routesOutput: string): Route[] {
         if (count === 5) {
             const [, verb, url, pattern, controllerAction] = line.split(/\s+/);
             const [controller, action] = controllerAction.split('#');
-            const refinedPattern = pattern.split('(.:format)')[0]
+            const refinedPattern = pattern.split('(.:format)')[0];
             routes.push({ verb, url, refinedPattern, controller, action });
         } else if (count === 4) {
             const [, url, pattern, controllerAction] = line.split(/\s+/);
             const [controller, action] = controllerAction.split('#');
             const verb = '';
-            const refinedPattern = pattern.split('(.:format)')[0]
+            const refinedPattern = pattern.split('(.:format)')[0];
             routes.push({ verb, url, refinedPattern, controller, action });
         }
     }
