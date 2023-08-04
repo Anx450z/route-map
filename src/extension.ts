@@ -12,8 +12,9 @@ async function initializeExtension(context: vscode.ExtensionContext) {
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
     const workspacePath = workspaceFolder?.uri.fsPath;
     const outputFilePath = path.join(workspacePath || '', 'tmp', 'routes_file.txt');
+    const gemFilePath = path.join(workspacePath || '', 'Gemfile');
 
-    if (!await fileExists(outputFilePath)) {
+    if (!await fileExists(outputFilePath) && await fileExists(gemFilePath)) {
         await updateRailsRoutesCommand();
     }
 }
