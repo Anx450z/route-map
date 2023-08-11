@@ -102,8 +102,7 @@ class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
             const routes = parseRoutes(stdout);
             return routes;
         } catch (error) {
-            console.error(`Error running 'rails routes' command: ${error}`);
-            vscode.window.showWarningMessage('An error occurred while retrieving routes information.');
+            console.error(`Error parsing the route information: ${error}`);
             return [];
         }
     }
