@@ -3,11 +3,13 @@ import { exec } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import { RubyTableCodeLensProvider } from './showTable';
+import { RubyModelCodeLensProvider } from './showModel';
 
 export async function activate(context: vscode.ExtensionContext) {
                 await initializeExtension(context);
                 await runRouteExtension(context);
                 await runTableExtension(context);
+                await runModelExtension(context);
     }
 
 async function initializeExtension(context: vscode.ExtensionContext) {
@@ -58,6 +60,20 @@ async function runTableExtension(context: vscode.ExtensionContext) {
                 const schemaPosition = new vscode.Position(line - 1, 0); // Line number is 1-based, position is 0-based
                 await vscode.window.showTextDocument(schemaDocument, { selection: new vscode.Range(schemaPosition, schemaPosition) });
             }
+        })        
+    );
+}
+
+async function runModelExtension(context: vscode.ExtensionContext) {
+    const codeLensModelProvider = new RubyModelCodeLensProvider();
+    context.subscriptions.push(
+        vscode.languages.registerCodeLensProvider('ruby', codeLensModelProvider)
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('extension.openModel', (filePath: string) => {
+            vscode.workspace.openTextDocument(filePath)
+            .then((document) => vscode.window.showTextDocument(document));
         })        
     );
 }

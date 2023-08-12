@@ -25,7 +25,6 @@ export class RubyTableCodeLensProvider implements vscode.CodeLensProvider {
         for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
             const lineText = lines[lineIndex];
             const match = /class\s+(\w+)(?:\s+)?<(?:\s+)?\s+(\w+)/.exec(lineText);
-            // const parentClassMatch = /class\(.*?\)(?:\s+)?<(?:\s+)?\s+(\w+)/.exec(lineText);  // Corrected regular expression
             if (match) {
                 console.log("Matches: ", match[1], match[2]);
                 const parentClassMatch = match[2];
