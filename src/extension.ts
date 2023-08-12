@@ -8,19 +8,37 @@ import { RubyMethodCodeLensProvider } from './showRoute';
 import fileExists from './common';
 
 export async function activate(context: vscode.ExtensionContext) {
-                await initializeExtension(context);
-                await runRouteExtension(context);
-                await runTableExtension(context);
-                await runModelExtension(context);
+    const config = vscode.workspace.getConfiguration('RailsRouteCodelens');
+
+    const showRoute = config.get('showRoute', true);
+    const showTables = config.get('showTables', true);
+    const showModels = config.get('showModels', true);
+    const run = await isRailsProject(context);
+    if (showRoute && run){
+        await initializeExtension(context);
+        await runRouteExtension(context);
     }
+    if (showModels && run){
+        await runModelExtension(context);
+    }
+    if (showTables && run){
+        await runTableExtension(context);
+    }
+}
+
+async function isRailsProject(context: vscode.ExtensionContext) {
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+    const workspacePath = workspaceFolder?.uri.fsPath;
+    const gemFilePath = path.join(workspacePath || '', 'Gemfile');
+    return fileExists(gemFilePath);
+}
 
 async function initializeExtension(context: vscode.ExtensionContext) {
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
     const workspacePath = workspaceFolder?.uri.fsPath;
     const outputFilePath = path.join(workspacePath || '', 'tmp', 'routes_file.txt');
-    const gemFilePath = path.join(workspacePath || '', 'Gemfile');
-
-    if (!await fileExists(outputFilePath) && await fileExists(gemFilePath)) {
+    
+    if (!await fileExists(outputFilePath)) {
         await updateRailsRoutesCommand();
     }
 }

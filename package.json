@@ -28,8 +28,24 @@
     ],
     "configuration": {
       "type": "object",
-      "title": "Ruby Method CodeLens",
-      "properties": {}
+      "title": "Rails Route Codelens",
+      "properties": {
+        "RailsRouteCodelens.showRoute": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show route information for controller actions"
+        },
+        "RailsRouteCodelens.showTables": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show table names for model"
+        },
+        "RailsRouteCodelens.showModels": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show models name for tables in schema"
+        }
+      }
     }
   },
   "scripts": {
