@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { exec } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
+import { RubyTableCodeLensProvider } from './showTable';
 
 export async function activate(context: vscode.ExtensionContext) {
     await initializeExtension(context);
@@ -20,9 +21,14 @@ async function initializeExtension(context: vscode.ExtensionContext) {
 }
 
 async function runExtension(context: vscode.ExtensionContext) {
-    const codeLensProvider = new RubyMethodCodeLensProvider();
+    const codeLensRouteProvider = new RubyMethodCodeLensProvider();
     context.subscriptions.push(
-        vscode.languages.registerCodeLensProvider('ruby', codeLensProvider)
+        vscode.languages.registerCodeLensProvider('ruby', codeLensRouteProvider)
+    );
+
+    const codeLensTableProvider = new RubyTableCodeLensProvider();
+    context.subscriptions.push(
+        vscode.languages.registerCodeLensProvider('ruby', codeLensTableProvider)
     );
 
     context.subscriptions.push(
@@ -30,6 +36,17 @@ async function runExtension(context: vscode.ExtensionContext) {
             vscode.workspace.openTextDocument(filePath)
                 .then((document) => vscode.window.showTextDocument(document));
         })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('extension.openTable', async (line: number) => {
+            if (vscode.workspace.workspaceFolders) {
+                const schemaUri = vscode.Uri.file(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, 'db', 'schema.rb'));
+                const schemaDocument = await vscode.workspace.openTextDocument(schemaUri);
+                const schemaPosition = new vscode.Position(line - 1, 0); // Line number is 1-based, position is 0-based
+                await vscode.window.showTextDocument(schemaDocument, { selection: new vscode.Range(schemaPosition, schemaPosition) });
+            }
+        })        
     );
 
     vscode.workspace.onDidSaveTextDocument(async (document: vscode.TextDocument) => {
