@@ -43,6 +43,10 @@ export class RubyTableCodeLensProvider implements vscode.CodeLensProvider {
                 }
             }
         }
+        // const editor = vscode.window.activeTextEditor;
+        // if (editor) {
+        //     editor.setDecorations(codeLensDecorationType, codeLenses);
+        // }
         
           return codeLenses;
       } catch (error) {
@@ -51,6 +55,15 @@ export class RubyTableCodeLensProvider implements vscode.CodeLensProvider {
       }
   }
 }
+// const codeLensDecorationType = vscode.window.createTextEditorDecorationType({
+//     // before: {
+//     //     // contentText: '▶:',
+//     //     // margin: '0 5px',
+//     //     // contentIconPath: '../images/icons8-table-48.png'
+//     // },
+//     gutterIconPath: 'src/images/icons8-table-48.png',
+//     gutterIconSize: 'auto',
+// });
 
 function camelToSnakeCase(input: string): string {
     return input.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase();

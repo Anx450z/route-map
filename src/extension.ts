@@ -111,7 +111,7 @@ class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
                             command: ''
                         };
                         if (viewFilePath !== '') {
-                            codeLens.command.title = `🌐 ${route.url} | ${route.refinedPattern} | ${route.verb} 👁️`;
+                            codeLens.command.title = `🌐 ${route.url} | ${route.refinedPattern} | ${route.verb} ⏿`;
                             codeLens.command.command = `extension.openView`;
                             codeLens.command.arguments = [viewFilePath];
                             codeLens.command.tooltip = `navigate to view: ${controller}#${action}`;
