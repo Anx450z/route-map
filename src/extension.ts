@@ -5,9 +5,10 @@ import * as path from 'path';
 import { RubyTableCodeLensProvider } from './showTable';
 
 export async function activate(context: vscode.ExtensionContext) {
-    await initializeExtension(context);
-    await runExtension(context);
-}
+                await initializeExtension(context);
+                await runRouteExtension(context);
+                await runTableExtension(context);
+    }
 
 async function initializeExtension(context: vscode.ExtensionContext) {
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
@@ -20,15 +21,10 @@ async function initializeExtension(context: vscode.ExtensionContext) {
     }
 }
 
-async function runExtension(context: vscode.ExtensionContext) {
+async function runRouteExtension(context: vscode.ExtensionContext) {
     const codeLensRouteProvider = new RubyMethodCodeLensProvider();
     context.subscriptions.push(
         vscode.languages.registerCodeLensProvider('ruby', codeLensRouteProvider)
-    );
-
-    const codeLensTableProvider = new RubyTableCodeLensProvider();
-    context.subscriptions.push(
-        vscode.languages.registerCodeLensProvider('ruby', codeLensTableProvider)
     );
 
     context.subscriptions.push(
@@ -36,6 +32,22 @@ async function runExtension(context: vscode.ExtensionContext) {
             vscode.workspace.openTextDocument(filePath)
                 .then((document) => vscode.window.showTextDocument(document));
         })
+    );
+
+    vscode.workspace.onDidSaveTextDocument(async (document: vscode.TextDocument) => {
+        if (document.fileName.endsWith('routes.rb')) {
+            try {
+                await updateRailsRoutesCommand();
+            } catch (error) {
+                console.error(`Error updating routes file: ${error}`);
+            }
+        }
+    });
+}
+async function runTableExtension(context: vscode.ExtensionContext) {
+    const codeLensTableProvider = new RubyTableCodeLensProvider();
+    context.subscriptions.push(
+        vscode.languages.registerCodeLensProvider('ruby', codeLensTableProvider)
     );
 
     context.subscriptions.push(
@@ -48,16 +60,6 @@ async function runExtension(context: vscode.ExtensionContext) {
             }
         })        
     );
-
-    vscode.workspace.onDidSaveTextDocument(async (document: vscode.TextDocument) => {
-        if (document.fileName.endsWith('routes.rb')) {
-            try {
-                await updateRailsRoutesCommand();
-            } catch (error) {
-                console.error(`Error updating routes file: ${error}`);
-            }
-        }
-    });
 }
 
 class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
@@ -76,7 +78,7 @@ class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
         const workspacePath = workspaceFolder?.uri.fsPath;
 
         try {
-            const controller = /app\/controllers\/(.*?)_controller\.rb/.exec(document.fileName)![1];
+            const controller = /app[\/\\]controllers[\/\\](.*?)_controller\.rb/.exec(document.fileName)![1];
             const routes = await this.getRoutes(workspacePath, controller);
 
             const promises = document.getText().split('\n').map(async (lineText, lineIndex) => {

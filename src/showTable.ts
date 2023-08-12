@@ -10,7 +10,7 @@ export class RubyTableCodeLensProvider implements vscode.CodeLensProvider {
   ): Promise<vscode.CodeLens[]> {
 
       const codeLenses: vscode.CodeLens[] = [];
-      const isModelFile = /app[\/\\]models[\/\\](.*?)(?:\.rb)?$/.test(document.fileName);
+      const isModelFile = /app[\/\\]models[\/\\][^\/\\]+\.rb$/.test(document.fileName);
       console.log("model file", isModelFile);
       if (!isModelFile) {
           console.log("not a model file");
@@ -21,28 +21,35 @@ export class RubyTableCodeLensProvider implements vscode.CodeLensProvider {
       const workspacePath = workspaceFolder?.uri.fsPath;
 
       try {
-          const promises = document.getText().split('\n').map(async (lineText, lineIndex) => {
-              const match = /class\s+(\w+)(?:\s+)?<(?:\s+)?ApplicationRecord/.exec(lineText);
-              console.log("match: " + match);
-              if (match) {
-                  const model = match[1];
-                  const table = await findTable(workspacePath!, model);
-                  if (table) {
-                      const codeLensRange = new vscode.Range(lineIndex, 0, lineIndex, 0);
-                      const codeLens = new vscode.CodeLens(codeLensRange);
-                      codeLens.command = {
-                          title: `🗓️ TABLE: ${table.tableName}`,
-                          arguments: [table.line],
-                          command: 'extension.openTable',
-                          tooltip: `Open table ${table.tableName}`
-                      };
-                      codeLenses.push(codeLens);
-                  }
-              }
-          });
-
-          await Promise.all(promises);
-
+        const lines = document.getText().split('\n');
+        for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+            const lineText = lines[lineIndex];
+            const match = /class\s+(\w+)(?:\s+)?<(?:\s+)?\s+(\w+)/.exec(lineText);
+            // const parentClassMatch = /class\(.*?\)(?:\s+)?<(?:\s+)?\s+(\w+)/.exec(lineText);  // Corrected regular expression
+            if (match) {
+                console.log("Matches: ", match[1], match[2]);
+                const parentClassMatch = match[2];
+                let model = match[1];
+                if (parentClassMatch !== "ApplicationRecord") {  // Check for parentClassMatch existence
+                    model = parentClassMatch;
+                }
+                console.log("current model: " + model);
+                const table = await findTable(workspacePath!, model);
+                if (table) {
+                    const codeLensRange = new vscode.Range(lineIndex, 0, lineIndex, 0);
+                    const codeLens = new vscode.CodeLens(codeLensRange);
+                    codeLens.command = {
+                        title: `🗓️ TABLE: ${table.tableName}`,
+                        arguments: [table.line],
+                        command: 'extension.openTable',
+                        tooltip: `Open table ${table.tableName}`
+                    };
+                    codeLenses.push(codeLens);
+                    break;  // Stop after first match
+                }
+            }
+        }
+        
           return codeLenses;
       } catch (error) {
           console.error(`Error while gen code lens: ${error}`);
@@ -69,8 +76,8 @@ async function findTable(workspacePath: string, model: string): Promise<Table | 
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
-            console.log('pluralized line ' + pluralize.plural(snakeCaseModel));
             if (line.includes(`create_table "${pluralize.plural(snakeCaseModel)}",`)) {
+                console.log('pluralized line ' + pluralize.plural(snakeCaseModel));
                 tableDefinitionLine = i;
                 tableName = line.match(/"(\w+)"/)?.[1] || '';
                 break;
