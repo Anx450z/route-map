@@ -11,12 +11,9 @@ export class RubyTableCodeLensProvider implements vscode.CodeLensProvider {
 
       const codeLenses: vscode.CodeLens[] = [];
       const isModelFile = /app[\/\\]models[\/\\][^\/\\]+\.rb$/.test(document.fileName);
-      console.log("model file", isModelFile);
       if (!isModelFile) {
-          console.log("not a model file");
           return codeLenses;
       }
-      console.log("this is model file", isModelFile);
       const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
       const workspacePath = workspaceFolder?.uri.fsPath;
 
@@ -26,13 +23,11 @@ export class RubyTableCodeLensProvider implements vscode.CodeLensProvider {
             const lineText = lines[lineIndex];
             const match = /class\s+(\w+)(?:\s+)?<(?:\s+)?\s+(\w+)/.exec(lineText);
             if (match) {
-                console.log("Matches: ", match[1], match[2]);
                 const parentClassMatch = match[2];
                 let model = match[1];
                 if (parentClassMatch !== "ApplicationRecord") {  // Check for parentClassMatch existence
                     model = parentClassMatch;
                 }
-                console.log("current model: " + model);
                 const table = await findTable(workspacePath!, model);
                 if (table) {
                     const codeLensRange = new vscode.Range(lineIndex, 0, lineIndex, 0);
@@ -41,7 +36,7 @@ export class RubyTableCodeLensProvider implements vscode.CodeLensProvider {
                         title: `🗓️ TABLE: ${table.tableName}`,
                         arguments: [table.line],
                         command: 'extension.openTable',
-                        tooltip: `Open table ${table.tableName}`
+                        tooltip: `Open schema for ${table.tableName}`
                     };
                     codeLenses.push(codeLens);
                     break;  // Stop after first match
@@ -52,7 +47,6 @@ export class RubyTableCodeLensProvider implements vscode.CodeLensProvider {
           return codeLenses;
       } catch (error) {
           console.error(`Error while gen code lens: ${error}`);
-          vscode.window.showWarningMessage('An error occurred while generating code lenses.');
           return [];
       }
   }
@@ -64,7 +58,6 @@ function camelToSnakeCase(input: string): string {
 
 async function findTable(workspacePath: string, model: string): Promise<Table | null> {
     const schemaPath = path.join(workspacePath, 'db', 'schema.rb');
-    console.log("model",model);
     try {
         const schemaContent = await fs.promises.readFile(schemaPath, 'utf-8');
         const lines = schemaContent.split('\n');
@@ -76,7 +69,6 @@ async function findTable(workspacePath: string, model: string): Promise<Table | 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
             if (line.includes(`create_table "${pluralize.plural(snakeCaseModel)}",`)) {
-                console.log('pluralized line ' + pluralize.plural(snakeCaseModel));
                 tableDefinitionLine = i;
                 tableName = line.match(/"(\w+)"/)?.[1] || '';
                 break;

@@ -13,7 +13,6 @@ export class RubyModelCodeLensProvider implements vscode.CodeLensProvider {
     if (!isSchemaFile) {
         return codeLenses;
     }
-    console.log("this is schema file");
     const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
     const workspacePath = workspaceFolder?.uri.fsPath;
     try {
@@ -23,7 +22,6 @@ export class RubyModelCodeLensProvider implements vscode.CodeLensProvider {
           const match = /create_table(?:\s+)?\s+"([^"]+)"/.exec(lineText);
           if (match) {
               const table = match[1];
-              console.log("current model: " + table);
               const model = await findModel(workspacePath!, table);
               if (model) {
                   const codeLensRange = new vscode.Range(lineIndex, 0, lineIndex, 0);
@@ -42,7 +40,6 @@ export class RubyModelCodeLensProvider implements vscode.CodeLensProvider {
         return codeLenses;
     } catch (error) {
         console.error(`Error while gen code lens: ${error}`);
-        vscode.window.showWarningMessage('An error occurred while generating code lenses.');
         return [];
     }
   }
@@ -61,7 +58,6 @@ function snakeToPascalCase(input: string): string {
 async function findModel(workspacePath: string, table: string): Promise<Model | undefined> {
   const singularTable = pluralize.singular(table);
   const modelName = snakeToPascalCase(singularTable);
-  console.log("modelName: " + modelName);
   const modelFileName = singularTable + '.rb';
   const modelFilePath = path.join(workspacePath, 'app', 'models', modelFileName);
 
