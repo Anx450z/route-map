@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
 import * as path from 'path';
+import fileExists from './common';
 import pluralize from 'pluralize';
 
 export class RubyModelCodeLensProvider implements vscode.CodeLensProvider {
@@ -68,15 +68,6 @@ async function findModel(workspacePath: string, table: string): Promise<Model | 
   } catch (error) {
       console.error(`Error while finding model: ${error}`);
   }
-
-  async function fileExists(filePath: string): Promise<boolean> {
-    try {
-        await fs.promises.access(filePath);
-        return true;
-    } catch {
-        return false;
-    }
-}
 
   return undefined;
 }

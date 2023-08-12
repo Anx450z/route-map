@@ -33,7 +33,7 @@ export class RubyTableCodeLensProvider implements vscode.CodeLensProvider {
                     const codeLensRange = new vscode.Range(lineIndex, 0, lineIndex, 0);
                     const codeLens = new vscode.CodeLens(codeLensRange);
                     codeLens.command = {
-                        title: `🗓️ TABLE: ${table.tableName}`,
+                        title: `🗓️ TABLE: ${table.tableName} ⏿`,
                         arguments: [table.line],
                         command: 'extension.openTable',
                         tooltip: `Open schema for ${table.tableName}`
