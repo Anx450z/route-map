@@ -27,7 +27,7 @@ export class RubyModelCodeLensProvider implements vscode.CodeLensProvider {
             const codeLensRange = new vscode.Range(lineIndex, 0, lineIndex, 0);
             const codeLens = new vscode.CodeLens(codeLensRange);
             codeLens.command = {
-              title: `💎 MODEL: ${model.modelName} ⏿`,
+              title: `💎 MODEL: ${model.modelName}`,
               arguments: [model.modelPath],
               command: "extension.openModel",
               tooltip: `OPEN MODEL FILE → ${model.modelName}`,

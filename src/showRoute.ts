@@ -63,7 +63,7 @@ export class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
                 tooltip: `URL PATTERN → ${route.refinedPattern}`
               };
               codeLensViewFile.command = {
-                title: `⏿`,
+                title: `📺`,
                 command: `extension.openView`,
                 arguments: [viewFilePath],
                 tooltip: `NAVIGATE TO VIEW → ${controller}#${action}`,
