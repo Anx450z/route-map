@@ -13,6 +13,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const showRoute = config.get("showRoute", true);
   const showTables = config.get("showTables", true);
   const showModels = config.get("showModels", true);
+  const showControllers = config.get("showControllers", true);
   const run = await isRailsProject(context);
   if (showRoute && run) {
     await initializeExtension(context);
@@ -24,7 +25,9 @@ export async function activate(context: vscode.ExtensionContext) {
   if (showTables && run) {
     await runTableExtension(context);
   }
-  await runControllerExtension(context);
+  if (showControllers && run) {
+    await runControllerExtension(context);
+  }
 }
 
 async function isRailsProject(context: vscode.ExtensionContext) {

@@ -1,7 +1,7 @@
 {
   "name": "rails-routes-codelens",
   "displayName": "Rails Routes CodeLens",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Shows Rails routes above their controller actions",
   "repository": "https://github.com/Anx450z/route-map",
   "publisher": "anx450z",
@@ -44,7 +44,12 @@
             "type": "boolean",
             "default": true,
             "description": "Show models name for tables in schema"
-        }
+        },
+        "RailsRouteCodelens.showControllers": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show controllers name and action in view files"
+      }
       }
     }
   },
