@@ -4,6 +4,7 @@ import * as path from "path";
 import { RubyTableCodeLensProvider } from "./showTable";
 import { RubyModelCodeLensProvider } from "./showModel";
 import { RubyMethodCodeLensProvider } from "./showRoute";
+import { RubyControllerCodeLensProvider } from "./showController";
 import fileExists from "./common";
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -23,6 +24,7 @@ export async function activate(context: vscode.ExtensionContext) {
   if (showTables && run) {
     await runTableExtension(context);
   }
+  await runControllerExtension(context);
 }
 
 async function isRailsProject(context: vscode.ExtensionContext) {
@@ -115,6 +117,24 @@ async function runModelExtension(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "extension.openModel",
+      (filePath: string) => {
+        vscode.workspace
+          .openTextDocument(filePath)
+          .then((document) => vscode.window.showTextDocument(document));
+      }
+    )
+  );
+}
+
+async function runControllerExtension(context: vscode.ExtensionContext) {
+  const codeLensControllerProvider = new RubyControllerCodeLensProvider();
+  context.subscriptions.push(
+    vscode.languages.registerCodeLensProvider("ruby", codeLensControllerProvider)
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "extension.openController",
       (filePath: string) => {
         vscode.workspace
           .openTextDocument(filePath)
