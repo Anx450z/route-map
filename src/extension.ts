@@ -132,7 +132,8 @@ async function runModelExtension(context: vscode.ExtensionContext) {
 async function runControllerExtension(context: vscode.ExtensionContext) {
   const codeLensControllerProvider = new RubyControllerCodeLensProvider();
   context.subscriptions.push(
-    vscode.languages.registerCodeLensProvider("ruby", codeLensControllerProvider)
+    vscode.languages.registerCodeLensProvider("ruby", codeLensControllerProvider),
+    vscode.languages.registerCodeLensProvider("erb", codeLensControllerProvider)
   );
 
   context.subscriptions.push(
