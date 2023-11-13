@@ -48,7 +48,7 @@ export class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
                 route.action
               );
               codeLens.command = {
-                title: `🌐 ${route.url} `,
+                title: `${prefixEmoji(route.url)} ${route.url} `,
                 command: "",
                 tooltip: `PREFIX → ${route.url} REQUEST`
               };
@@ -63,7 +63,7 @@ export class RubyMethodCodeLensProvider implements vscode.CodeLensProvider {
                 tooltip: `URL PATTERN → ${route.refinedPattern}`
               };
               codeLensViewFile.command = {
-                title: `📺`,
+                title: `📤`,
                 command: `extension.openView`,
                 arguments: [viewFilePath],
                 tooltip: `NAVIGATE TO VIEW → ${controller}#${action}`,
@@ -188,6 +188,17 @@ async function getViewFilePath(
   } else {
     return ``;
   }
+}
+
+function prefixEmoji(prefix: string) {
+  const emojiMap: Record<string, string> = {
+    "GET": '📬',
+    "POST": '📮',
+    "PATCH": '🩹',
+    "PUT": '🔄',
+    "DELETE": '🗑️',
+  };
+  return (emojiMap[prefix]as string) || '❓';
 }
 
 interface Route {
