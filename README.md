@@ -12,16 +12,16 @@ Rails Route Codelens is a Visual Studio Code extension that provides code lenses
 ## Screenshots
 
 - Shows the route information above controller actions and link to view files if available.
-<img src="./screenshots/controller.png" alt="controller" height="180px">
+<img src="./screenshots/controller.png" alt="controller" height="500px">
 
 - Shows the name of the table in models and provide link to navigate to schema file.
-<img src="./screenshots/model.png" alt="model" height="180px">
+<img src="./screenshots/model.png" alt="model" height="500px">
 
 - Shows the Controller information above in view files.
-<img src="./screenshots/view.png" alt="view" height="180px">
+<img src="./screenshots/view.png" alt="view" height="500px">
 
 - Shows the Model name above table and link to the model file.
-<img src="./screenshots/schema.png" alt="schema" height="180px">
+<img src="./screenshots/schema.png" alt="schema" height="500px">
 
 ## Requirements
 
